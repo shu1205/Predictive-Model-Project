@@ -1,0 +1,119 @@
+#air quality index predication
+
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sns
+from sklearn.metrics import classification_report
+from sklearn import metrics
+from sklearn import tree
+
+# add dataset 
+
+df=pd.read_csv('city_day.csv',na_values='=')
+
+check the dataset 
+df
+df.info()
+df.isnull().sum()
+df.head(6)
+df.columns
+data2=df.copy()
+
+#replace null values with mean
+
+data2=data2.fillna(data2.mean())
+data2.head()
+data2.info()
+
+#mapping 
+dist=(data2['City'])
+distset=set(dist)
+dd=list(distset)
+dictofWords={ dd[i] : i for i in range (0, len(dd))}
+data2['City']=data2['City'].map(dictofWords)
+
+dist=(data2['AQI_Bucket'])
+distset=set(dist)
+dd=list(distset)
+dictofWords={ dd[i] : i for i in range (0, len(dd))}
+data2['AQI_Bucket']=data2['AQI_Bucket'].map(dictofWords)
+
+data2["AQI_Bucket"]=data2["AQI_Bucket"].fillna(data2["AQI_Bucket"].mean())
+
+data2
+
+data2.isnull().sum()
+
+data2
+
+data2=data2.drop('Date',1)
+
+data2.columns
+
+data2=data2.drop('AQI_Bucket', 1)
+
+data2.columns
+
+#EDA(analyse the data)
+
+import plotly.express as px
+
+#plotting the bubble chart
+fig = px.scatter(df, x="City",y="AQI")
+
+#Showing the plot
+fig.show()
+
+#plotting the bubble chart
+fig2=px.scatter(df, x="PM10" , y="AQI")
+
+#showing the plot
+fig2.show()
+
+#plotting the bubble chart
+fig5=px.scatter(df, x="NOx",y="AQI")
+
+#Showing the plot
+fig5.show()
+
+import matplotlib.pyplot as plt
+
+plt.figure(figsize=(12,10))
+sns.heatmap(df.corr(),cmap='coolwarm',annot=True)
+
+pollutants = ['PM2.5', 'PM10', 'NO', 'NO2', 'NOx', 'NH3', 'CO', 'SO2', 'O3', 'Benzene', 'Toluene', 'Xylene']
+data2 = data2[pollutants]
+
+print('Distribution of different pollutants in last 5 years')
+data2.plot(kind='line',figsize=(18,18),cmap='coolwarm',subplots=True,fontsize=10);
+
+df[['City','AQI']].groupby('City').mean().sort_values('AQI').plot(kind='bar',cmap='Blues_r',figsize=(8,8))
+plt.title('Average AQI in last 5 years');
+
+#preprocessing , feature selecation
+# train and test split data
+#training multiple models
+
+data2.info()
+data2.columns
+
+features = data2[['City', 'PM2.5', 'PM10', 'NO', 'NO2', 'NOx', 'NH3', 'CO', 'SO2', 'O3','Benzene', 'Toluene', 'Xylene']]
+labels = data2['AQI']
+
+#splitting into train and test data
+
+from sklearn.model_selection import train_test_split
+Xtrain, Xtest, Ytrain, Ytest = train_test_split(features,labels,test_size = 0.2,random_state=2)
+
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.datasets import make_regression
+regr = RandomForestRegressor(max_depth=2,random_state=0)
+regr.fit(Xtrain,Ytrain)
+print(regr.predict(Xtest))
+
+y_pred=regr.predict(Xtest)
+
+from sklearn.metrics import r2_score
+
+r2_score(Ytest, y_pred)
